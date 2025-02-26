@@ -79,7 +79,7 @@ with st.sidebar:
         st.error("Failed to initialize Gemini API. Please check your API key.")
     
     st.markdown("---")
-    st.header("<u>Navigation</u>", unsafe_allow_html=True)
+    st.header("Navigation")
     if st.button("Plan Trip", key="nav_plan", use_container_width=True):
         st.session_state.active_tab = "Plan"
     if st.button("My Trips", key="nav_trips", use_container_width=True):
