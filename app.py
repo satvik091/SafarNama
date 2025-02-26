@@ -75,7 +75,6 @@ with st.sidebar:
     st.session_state.gemini_model = initialize_gemini(api_key)
     if st.session_state.gemini_model:
         st.session_state.api_key_set = True
-        st.success("API Key set successfully!")
     else:
         st.error("Failed to initialize Gemini API. Please check your API key.")
     
