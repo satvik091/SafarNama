@@ -229,7 +229,7 @@ def show_trip_details(trip):
     
     # Display itinerary
     if "itinerary" in trip and trip["itinerary"]:
-        st.header("<u>Itinerary</u>")
+        st.header("Itinerary")
         for day in trip["itinerary"]:
             with st.expander(f"Day {day.get('day_number', '?')}", expanded=False):
                 activities = day.get("activities", [])
@@ -244,7 +244,7 @@ def show_trip_details(trip):
     
     with col1:
         if "accommodations" in trip and trip["accommodations"]:
-            st.header("<u>Accommodations</u>")
+            st.header("Accommodations")
             for acc in trip["accommodations"]:
                 if isinstance(acc, dict) and "name" in acc:
                     st.write(f"• **{acc['name']}**")
@@ -256,7 +256,7 @@ def show_trip_details(trip):
                     st.write(f"• {acc}")
             
         if "attractions" in trip and trip["attractions"]:
-            st.header("<u>Must-Visit Attractions</u>")
+            st.header("Must-Visit Attractions")
             for attr in trip["attractions"]:
                 if isinstance(attr, dict) and "name" in attr:
                     st.write(f"• **{attr['name']}**")
@@ -267,7 +267,7 @@ def show_trip_details(trip):
     
     with col2:
         if "food" in trip and trip["food"]:
-            st.header("<u>Food Recommendations</u>")
+            st.header("Food Recommendations")
             for food in trip["food"]:
                 if isinstance(food, dict) and "name" in food:
                     st.write(f"• **{food['name']}**")
@@ -277,7 +277,7 @@ def show_trip_details(trip):
                     st.write(f"• {food}")
                     
         if "transportation" in trip and trip["transportation"]:
-            st.header("<u>Transportation Tips</u>")
+            st.header("Transportation Tips")
             if isinstance(trip["transportation"], dict):
                 for k, v in trip["transportation"].items():
                     st.write(f"• **{k.title()}:** {v}")
@@ -291,7 +291,7 @@ def show_trip_details(trip):
     st.markdown("---")
     
     if "costs" in trip and trip["costs"]:
-        st.header("<u>Estimated Costs</u>")
+        st.header("Estimated Costs")
         cost_data = []
         
         if isinstance(trip["costs"], dict):
@@ -318,7 +318,7 @@ def show_trip_details(trip):
             st.dataframe(cost_df, use_container_width=True)
     
     if "tips" in trip and trip["tips"]:
-        st.header("<u>Travel Tips</u>",unsafe_allow_html=True)
+        st.header("Travel Tips")
         for tip in trip["tips"]:
             st.write(f"• {tip}")
     
@@ -388,7 +388,7 @@ if st.session_state.active_tab == "Plan":
 
 # My Trips Tab
 elif st.session_state.active_tab == "Trips":
-    st.header("<u>My Trips</u>")
+    st.header("My Trips")
     
     if not st.session_state.trips:
         st.info("You haven't planned any trips yet. Go to the 'Plan Trip' tab to create your first trip!")
@@ -423,7 +423,7 @@ elif st.session_state.active_tab == "Trips":
 
 # Expense Tracker Tab
 elif st.session_state.active_tab == "Expenses":
-    st.header("<u>Expense Tracker</u>")
+    st.header("Expense Tracker")
     
     if not st.session_state.trips:
         st.info("You haven't planned any trips yet. Go to the 'Plan Trip' tab to create your first trip!")
