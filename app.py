@@ -91,18 +91,19 @@ with st.sidebar:
     st.caption("Made with your well wishes.. ❤️")
 
 # Function to get AI recommendations
+# Function to get AI recommendations
 def get_recommendations(destination, duration, interests, budget, travelers):
     if not st.session_state.api_key_set:
         st.warning("Please set your Gemini API Key first.")
         return None
-
+    
     try:
         prompt = f"""
         Create a comprehensive trip plan for {destination} for {duration} days.
         Budget: {budget}
         Number of travelers: {travelers}
         Interests: {', '.join(interests)}
-
+        
         Please provide:
         1. A day-by-day itinerary with specific activities and places
         2. Recommended accommodations within budget
@@ -111,7 +112,7 @@ def get_recommendations(destination, duration, interests, budget, travelers):
         5. Transportation tips
         6. Estimated costs for major categories (accommodation, food, activities, transportation)
         7. Essential travel tips for this destination
-
+        
         Format the response as a structured JSON with the following keys:
         - itinerary (array of day objects with day_number, activities)
         - accommodations (array of options)
@@ -120,29 +121,111 @@ def get_recommendations(destination, duration, interests, budget, travelers):
         - transportation (object with tips)
         - costs (object with estimated costs per category)
         - tips (array of travel tips)
+        
+        Make sure the JSON is properly formatted with all property names enclosed in double quotes.
         """
-
+        
         response = st.session_state.gemini_model.generate_content(prompt)
+        
         try:
             # Try to extract JSON from the response
             content = response.text
             # Handle case where JSON might be within markdown code blocks
-            if "json" in content:
+            if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
-
-            # Parse the JSON
-            trip_plan = json.loads(content)
+            
+            # Add additional JSON fixing logic
+            # Sometimes models forget to properly format JSON with double quotes
+            try:
+                trip_plan = json.loads(content)
+            except json.JSONDecodeError as e:
+                st.warning(f"Attempting to fix malformed JSON. Original error: {e}")
+                
+                # Display raw content for debugging
+                with st.expander("Raw Response (for debugging)"):
+                    st.code(content)
+                
+                # Create a basic structure if JSON parsing fails
+                trip_plan = {
+                    "itinerary": [],
+                    "accommodations": [],
+                    "attractions": [],
+                    "food": [],
+                    "transportation": {},
+                    "costs": {},
+                    "tips": []
+                }
+                
+                # Parse the content section by section
+                sections = {
+                    "Itinerary": "itinerary",
+                    "Day": "itinerary", 
+                    "Accommodations": "accommodations",
+                    "Attractions": "attractions",
+                    "Food": "food",
+                    "Transportation": "transportation",
+                    "Costs": "costs", 
+                    "Tips": "tips"
+                }
+                
+                # Extract structured data from text
+                current_section = None
+                current_day = None
+                
+                for line in content.split('\n'):
+                    line = line.strip()
+                    if not line:
+                        continue
+                        
+                    # Check if this is a section header
+                    for header, section_key in sections.items():
+                        if line.startswith(header) or header in line:
+                            current_section = section_key
+                            if header == "Day":
+                                try:
+                                    day_num = int(''.join(filter(str.isdigit, line.split(':')[0])))
+                                    current_day = {"day_number": day_num, "activities": []}
+                                    trip_plan["itinerary"].append(current_day)
+                                except:
+                                    pass
+                            break
+                    
+                    # Add content to the current section
+                    if current_section and not any(line.startswith(h) for h in sections.keys()):
+                        if current_section == "itinerary" and current_day and ":" not in line:
+                            if line.startswith("- ") or line.startswith("• "):
+                                current_day["activities"].append(line[2:])
+                            else:
+                                current_day["activities"].append(line)
+                        elif current_section == "accommodations" and line.startswith("- "):
+                            trip_plan["accommodations"].append(line[2:])
+                        elif current_section == "attractions" and line.startswith("- "):
+                            trip_plan["attractions"].append(line[2:])
+                        elif current_section == "food" and line.startswith("- "):
+                            trip_plan["food"].append(line[2:])
+                        elif current_section == "transportation" and ":" in line:
+                            key, value = line.split(":", 1)
+                            trip_plan["transportation"][key.strip()] = value.strip()
+                        elif current_section == "costs" and ":" in line:
+                            key, value = line.split(":", 1)
+                            trip_plan["costs"][key.strip()] = value.strip()
+                        elif current_section == "tips" and line.startswith("- "):
+                            trip_plan["tips"].append(line[2:])
+                
+                # Notify the user
+                st.info("Created a simplified trip plan from the AI response. Some details may be missing.")
+            
             return trip_plan
-        except json.JSONDecodeError as e:
-            st.error(f"Error parsing JSON from AI response: {e}")
+        except Exception as e:
+            st.error(f"Error processing AI response: {e}")
             st.write("Raw response:", response.text)
             return None
     except Exception as e:
         st.error(f"Error getting recommendations: {e}")
         return None
-
+        
 # Function to save trips
 def save_trip(trip_data):
     if 'id' not in trip_data:
