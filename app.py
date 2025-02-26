@@ -88,7 +88,7 @@ with st.sidebar:
         st.session_state.active_tab = "Expenses"
     
     st.markdown("---")
-    st.caption("Made with ❤️ using Streamlit and Gemini AI")
+    st.caption("Made with your well wishes.  ❤️ ")
 
 # Function to get AI recommendations
 def get_recommendations(destination, duration, interests, budget, travelers):
