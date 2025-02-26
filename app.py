@@ -1,3 +1,4 @@
+%%writefile app.py
 import streamlit as st
 import google.generativeai as genai
 import os
@@ -8,7 +9,7 @@ import plotly.express as px
 import random
 
 # Configure page
-st.set_page_config(page_title="SafarNama- Your Trip Planner", page_icon="✈️", layout="wide")
+st.set_page_config(page_title="Safarनामा- Your Trip Planner", page_icon="✈️", layout="wide")
 
 # Styling
 st.markdown("""
@@ -45,8 +46,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # App title
-st.markdown("<div class='title'><u><strong>✈️ Safarनामा- Your Smart Trip Planner</strong></u></div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Powered by your happiness</div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>✈️ Safarनामा- Your Smart Trip Planner</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Powered by your well wishes</div>", unsafe_allow_html=True)
 
 # Initialize session state for storing trip information
 if 'trips' not in st.session_state:
@@ -70,13 +71,19 @@ def initialize_gemini(api_key):
 
 # API Key configuration
 with st.sidebar:
-    api_key = "AIzaSyDJNmx7PKmb92aHcrwBK7L5IKHipNzjVck"
-    os.environ["GOOGLE_API_KEY"] = api_key
-    st.session_state.gemini_model = initialize_gemini(api_key)
-    if st.session_state.gemini_model:
-        st.session_state.api_key_set = True
-    else:
-        st.error("Failed to initialize Gemini API. Please check your API key.")
+    st.header("Configuration")
+    api_key = st.text_input("Enter Gemini API Key", type="password")
+    if st.button("Set API Key"):
+        if api_key:
+            os.environ["GOOGLE_API_KEY"] = api_key
+            st.session_state.gemini_model = initialize_gemini(api_key)
+            if st.session_state.gemini_model:
+                st.session_state.api_key_set = True
+                st.success("API Key set successfully!")
+            else:
+                st.error("Failed to initialize Gemini API. Please check your API key.")
+        else:
+            st.warning("Please enter a valid API key.")
 
     st.markdown("---")
     st.header("Navigation")
@@ -88,165 +95,61 @@ with st.sidebar:
         st.session_state.active_tab = "Expenses"
 
     st.markdown("---")
-    st.caption("Made with your well wishes.. ❤️")
+    st.caption("Made by Satvik Gupta❤️")
 
 # Function to get AI recommendations
 def get_recommendations(destination, duration, interests, budget, travelers):
     if not st.session_state.api_key_set:
         st.warning("Please set your Gemini API Key first.")
         return None
-    
+
     try:
-        # Simplified prompt that asks for structured sections rather than direct JSON
         prompt = f"""
         Create a comprehensive trip plan for {destination} for {duration} days.
         Budget: {budget}
         Number of travelers: {travelers}
         Interests: {', '.join(interests)}
-        
-        Please provide the following information in a CLEARLY LABELED format:
-        
-        SECTION: ITINERARY
-        - Provide a day-by-day breakdown with numbered days (Day 1, Day 2, etc.)
-        - For each day, list 3-5 specific activities or places to visit
-        
-        SECTION: ACCOMMODATIONS
-        - List 2-3 recommended accommodations within the budget
-        
-        SECTION: ATTRACTIONS
-        - List 5-7 must-visit attractions based on the interests
-        
-        SECTION: FOOD
-        - List 4-5 local food recommendations or restaurants
-        
-        SECTION: TRANSPORTATION
-        - Provide transportation tips specific to this destination
-        
-        SECTION: COSTS
-        - Estimate costs for: accommodation, food, activities, and transportation
-        
-        SECTION: TIPS
-        - Provide 3-5 essential travel tips for this destination
-        
-        Please format each section with clear section headers and bullet points for list items.
+
+        Please provide:
+        1. A day-by-day itinerary with specific activities and places
+        2. Recommended accommodations within budget
+        3. Must-visit attractions based on the interests
+        4. Local food recommendations
+        5. Transportation tips
+        6. Estimated costs for major categories (accommodation, food, activities, transportation)
+        7. Essential travel tips for this destination
+
+        Format the response as a structured JSON with the following keys:
+        - itinerary (array of day objects with day_number, activities)
+        - accommodations (array of options)
+        - attractions (array of places)
+        - food (array of recommendations)
+        - transportation (object with tips)
+        - costs (object with estimated costs per category)
+        - tips (array of travel tips)
         """
-        
-        # Generate content from the model
+
         response = st.session_state.gemini_model.generate_content(prompt)
-        content = response.text
-        
-        # Display raw content for debugging
-        with st.expander("Raw AI Response"):
-            st.markdown(content)
-        
-        # Parse the response manually into structured sections
-        trip_plan = {
-            "itinerary": [],
-            "accommodations": [],
-            "attractions": [],
-            "food": [],
-            "transportation": {},
-            "costs": {},
-            "tips": []
-        }
-        
-        # Split the response into sections
-        current_section = None
-        section_content = []
-        
-        sections = {
-            "ITINERARY": "itinerary",
-            "ACCOMMODATIONS": "accommodations",
-            "ATTRACTIONS": "attractions",
-            "FOOD": "food",
-            "TRANSPORTATION": "transportation",
-            "COSTS": "costs",
-            "TIPS": "tips"
-        }
-        
-        lines = content.split('\n')
-        for i, line in enumerate(lines):
-            line = line.strip()
-            if not line:
-                continue
-            
-            # Check if this is a section header
-            section_match = False
-            for header, section_key in sections.items():
-                if header in line.upper():
-                    # Save previous section content before moving to new section
-                    if current_section and section_content:
-                        _process_section(trip_plan, current_section, section_content)
-                    current_section = section_key
-                    section_content = []
-                    section_match = True
-                    break
-            
-            if section_match:
-                continue
-                
-            # Process day headers within itinerary
-            if current_section == "itinerary" and "DAY" in line.upper() and any(c.isdigit() for c in line):
-                # Extract day number
-                try:
-                    day_num = int(''.join(filter(str.isdigit, line)))
-                    # Check if we already have content for a previous day
-                    if section_content:
-                        # Process the previous day
-                        day_data = {"day_number": section_content[0], "activities": section_content[1:]}
-                        trip_plan["itinerary"].append(day_data)
-                    # Start new day
-                    section_content = [day_num]
-                except:
-                    section_content.append(line)
-            else:
-                # Add content to current section
-                section_content.append(line)
-        
-        # Process the last section
-        if current_section and section_content:
-            _process_section(trip_plan, current_section, section_content)
-            
-        return trip_plan
-    
+        try:
+            # Try to extract JSON from the response
+            content = response.text
+            # Handle case where JSON might be within markdown code blocks
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+
+            # Parse the JSON
+            trip_plan = json.loads(content)
+            return trip_plan
+        except json.JSONDecodeError as e:
+            st.error(f"Error parsing JSON from AI response: {e}")
+            st.write("Raw response:", response.text)
+            return None
     except Exception as e:
-        st.error(f"Error getting recommendations: {str(e)}")
+        st.error(f"Error getting recommendations: {e}")
         return None
 
-def _process_section(trip_plan, section, content):
-    """Helper function to process each section of content"""
-    
-    # Handle itinerary differently (already processed in the main loop)
-    if section == "itinerary" and content and isinstance(content[0], int):
-        day_data = {"day_number": content[0], "activities": []}
-        for line in content[1:]:
-            if line.startswith("- ") or line.startswith("• "):
-                day_data["activities"].append(line[2:])
-            else:
-                day_data["activities"].append(line)
-        trip_plan["itinerary"].append(day_data)
-    
-    # Handle list-based sections
-    elif section in ["accommodations", "attractions", "food", "tips"]:
-        for line in content:
-            if line.startswith("- ") or line.startswith("• "):
-                trip_plan[section].append(line[2:])
-            else:
-                trip_plan[section].append(line)
-    
-    # Handle object-based sections (transportation, costs)
-    elif section in ["transportation", "costs"]:
-        for line in content:
-            if ":" in line:
-                parts = line.split(":", 1)
-                key = parts[0].strip().replace("- ", "")
-                value = parts[1].strip()
-                trip_plan[section][key] = value
-            elif line.startswith("- ") or line.startswith("• "):
-                # For bullets without key-value format, use the line as both key and value
-                line = line[2:]
-                trip_plan[section][line] = line
-        
 # Function to save trips
 def save_trip(trip_data):
     if 'id' not in trip_data:
