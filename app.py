@@ -70,10 +70,7 @@ def initialize_gemini(api_key):
 
 # API Key configuration
 with st.sidebar:
-    st.header("Configuration")
-    api_key = st.text_input("Enter Gemini API Key", type="password")
-    if st.button("Set API Key"):
-        if api_key:
+            apikey="AIzaSyDJNmx7PKmb92aHcrwBK7L5IKHipNzjVck"
             os.environ["GOOGLE_API_KEY"] = api_key
             st.session_state.gemini_model = initialize_gemini(api_key)
             if st.session_state.gemini_model:
@@ -81,8 +78,6 @@ with st.sidebar:
                 st.success("API Key set successfully!")
             else:
                 st.error("Failed to initialize Gemini API. Please check your API key.")
-        else:
-            st.warning("Please enter a valid API key.")
     
     st.markdown("---")
     st.header("Navigation")
