@@ -46,7 +46,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # App title
-st.markdown("<div class='title'>✈️ Safarnama- Smart Trip Planner ✈️</div>", unsafe_allow_html=True)
+st.markdown("<div class='title'><u>✈️ Safarnama- Smart Trip Planner ✈️</u></div>", unsafe_allow_html=True)
 
 # Initialize session state for storing trip information
 if 'trips' not in st.session_state:
