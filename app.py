@@ -46,7 +46,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # App title
-st.markdown("<div class='title'><u>✈️ Safarnama- Smart Trip Planner ✈️</u></div>", unsafe_allow_html=True)
+st.markdown("<div class='title'><u><strong>✈️ Safarnama- Smart Trip Planner ✈️</strong></u></div>", unsafe_allow_html=True)
 
 # Initialize session state for storing trip information
 if 'trips' not in st.session_state:
@@ -88,7 +88,7 @@ with st.sidebar:
         st.session_state.active_tab = "Expenses"
     
     st.markdown("---")
-    st.caption("Made with your well wishes.  ❤️ ")
+    st.caption("<u>Made with your well wishes.❤️</u> ",unsafe_allow_html=True)
 
 # Function to get AI recommendations
 def get_recommendations(destination, duration, interests, budget, travelers):
