@@ -334,7 +334,7 @@ def show_trip_details(trip):
 
 # Plan Trip Tab
 if st.session_state.active_tab == "Plan":
-    st.header("<u>Plan Your Trip</u>",unsafe_allow_html=True)
+    st.header("Plan Your Trip")
     
     with st.form("trip_form"):
         destination = st.text_input("Destination", value=st.session_state.current_trip.get("destination", ""))
