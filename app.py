@@ -127,7 +127,7 @@ def get_recommendations(destination, duration, interests, budget, travelers):
             # Try to extract JSON from the response
             content = response.text
             # Handle case where JSON might be within markdown code blocks
-            if "```json" in content:
+            if "json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
